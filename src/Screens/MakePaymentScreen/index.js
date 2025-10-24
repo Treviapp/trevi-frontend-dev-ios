@@ -20,12 +20,14 @@ export default function MakePaymentScreen({ route, navigation }) {
   const { name, amount, message, photo, hostCode } = route.params;
   const { confirmPayment, loading } = useConfirmPayment(); // Stripe's internal loading for confirm step
   const [cardDetails, setCardDetails] = useState();
-  const [submitting, setSubmitting] = useState(false);   // our own submitting (create intent + confirm)
+  const [submitting, setSubmitting] = useState(false);
   const [slow, setSlow] = useState(false);
   const slowTimerRef = useRef(null);
 
-  // ❌ Trevi fee handled on backend; amount is gift only
-  const totalAmount = parseFloat(amount);
+  // ✅ Calculate Trevi fee (4% + £1)
+  const giftAmount = parseFloat(amount);
+  const treviFee = (giftAmount * 0.04) + 1;
+  const totalAmount = giftAmount + treviFee;
 
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -68,7 +70,6 @@ export default function MakePaymentScreen({ route, navigation }) {
       } catch (err) {
         lastErr = err;
         console.warn('⚠️ create PaymentIntent error:', err?.message || err);
-        // retry on network-ish issues once
         if (attempt === 0) {
           await sleep(700);
           continue;
@@ -89,16 +90,15 @@ export default function MakePaymentScreen({ route, navigation }) {
     if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
     slowTimerRef.current = setTimeout(() => setSlow(true), 2000);
 
-    const minLoadMs = 900; // keep UX smooth
+    const minLoadMs = 900;
     const start = Date.now();
 
     try {
       console.log('📦 hostCode being sent:', hostCode);
       console.log('🧪 route.params:', route.params);
 
-      // ✅ Build FormData for text + optional image
       const formData = new FormData();
-      formData.append('amount', Math.round(parseFloat(amount) * 100)); // gift only
+      formData.append('amount', Math.round(parseFloat(amount) * 100)); // gift only (pence)
       formData.append('host_code', hostCode);
       formData.append('name', name ?? '');
       formData.append('message', message ?? '');
@@ -113,14 +113,14 @@ export default function MakePaymentScreen({ route, navigation }) {
         });
       }
 
-      // 1) Create PaymentIntent (with one retry + small backoff)
+      // 1️⃣ Create PaymentIntent
       const data = await fetchPaymentIntent(formData);
       console.log('✅ Parsed JSON response:', data);
 
       const clientSecret = data?.clientSecret;
       if (!clientSecret) throw new Error('No client secret returned');
 
-      // 2) Confirm Payment with Stripe
+      // 2️⃣ Confirm Payment with Stripe
       const { paymentIntent, error } = await confirmPayment(clientSecret, {
         paymentMethodType: 'Card',
         paymentMethodData: { billingDetails: { name } },
@@ -129,7 +129,6 @@ export default function MakePaymentScreen({ route, navigation }) {
       console.log('📍 paymentIntent:', paymentIntent);
       console.log('❌ confirmPayment error:', error);
 
-      // Ensure minimum spinner time
       const elapsed = Date.now() - start;
       if (elapsed < minLoadMs) await sleep(minLoadMs - elapsed);
 
@@ -144,8 +143,6 @@ export default function MakePaymentScreen({ route, navigation }) {
         return;
       }
 
-      // Fallback: not succeeded (processing/incomplete)
-      console.log('⚠️ PaymentIntent returned but not successful:', paymentIntent);
       Alert.alert(
         'Payment incomplete',
         'Something went wrong with the payment. Please try again.'
@@ -178,10 +175,9 @@ export default function MakePaymentScreen({ route, navigation }) {
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <Text style={styles.title}>Confirm & Pay</Text>
 
-          <Text style={styles.summary}>Gift Amount: £{amount}</Text>
-          <Text style={styles.summaryTotal}>
-            Total to Pay: £{totalAmount.toFixed(2)} + £1.20 Trevi fee (applied at checkout)
-          </Text>
+          <Text style={styles.summary}>Gift Amount: £{giftAmount.toFixed(2)}</Text>
+          <Text style={styles.summary}>Trevi Fee: £{treviFee.toFixed(2)}</Text>
+          <Text style={styles.summaryTotal}>Total to Pay: £{totalAmount.toFixed(2)}</Text>
 
           {message ? <Text style={styles.summary}>Message: {message}</Text> : null}
 
@@ -244,4 +240,5 @@ const localStyles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
 

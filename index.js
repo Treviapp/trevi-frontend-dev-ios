@@ -15,5 +15,6 @@ function App() {
     </StripeProvider>
   );
 }
-
+import { logBaseURL } from './src/api/config';
+logBaseURL();
 registerRootComponent(App);

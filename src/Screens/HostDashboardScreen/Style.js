@@ -114,5 +114,18 @@ export default StyleSheet.create({
     color: '#333',
     fontSize: 16,
   },
+  giftReelButton: {
+    marginTop: 12,
+    backgroundColor: '#f4b942',
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    alignSelf: 'center',
+    width: '70%',
+  },
+  giftReelButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 });
-

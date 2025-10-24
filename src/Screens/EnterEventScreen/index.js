@@ -1,5 +1,17 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, Image, ActivityIndicator, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  Image,
+  ActivityIndicator,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import styles from './Style';
 import EnterEventBackground from '../EnterEventBackground';
 import { client } from '../../api/config'; // ✅ axios instance
@@ -14,12 +26,11 @@ export default function EnterEventScreen({ navigation }) {
 
   const isRetriable = (err) => {
     const status = err?.response?.status;
-    // retry on timeouts, network errors, and 5xx
     return err?.code === 'ECONNABORTED' || !status || status >= 500;
   };
 
   const handleJoin = async () => {
-    console.log('🚨 Join Event button was pressed'); // Debug log
+    console.log('🚨 Join Event button was pressed');
 
     const trimmed = code.trim().toUpperCase();
     if (!trimmed) {
@@ -41,22 +52,20 @@ export default function EnterEventScreen({ navigation }) {
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
           response = await client.get(`/campaigns/guest/${trimmed}`, { timeout: 15000 });
-          break; // success
+          break;
         } catch (err) {
           lastErr = err;
           if (attempt === 0 && isRetriable(err)) {
-            // small backoff then retry once
             await sleep(700);
             continue;
           }
-          throw err; // non-retriable or out of attempts
+          throw err;
         }
       }
 
       const campaign = response.data;
-      console.log('✅ Guest campaign found:', campaign); // Success log
+      console.log('✅ Guest campaign found:', campaign);
 
-      // ensure a minimum spinner time for smooth UX
       const elapsed = Date.now() - start;
       if (elapsed < minLoadMs) await sleep(minLoadMs - elapsed);
 
@@ -71,7 +80,6 @@ export default function EnterEventScreen({ navigation }) {
       const elapsed = Date.now() - start;
       if (elapsed < minLoadMs) await sleep(minLoadMs - elapsed);
 
-      // Friendly error without scaring users during transient lag
       const status = err?.response?.status;
       const msg =
         status === 404
@@ -93,39 +101,57 @@ export default function EnterEventScreen({ navigation }) {
 
   return (
     <EnterEventBackground>
-      <View style={styles.imageContainer}>
-        <Image
-          source={require('../../Assets/Images/doorbell.png')}
-          style={styles.image}
-          resizeMode="contain"
-        />
-      </View>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+      >
+        <ScrollView
+          contentContainerStyle={[styles.scrollContainer || {}, { flexGrow: 1, justifyContent: 'center' }]}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={{ alignItems: 'center', paddingHorizontal: 20 }}>
+            <View style={styles.imageContainer}>
+              <Image
+                source={require('../../Assets/Images/doorbell.png')}
+                style={styles.image}
+                resizeMode="contain"
+              />
+            </View>
 
-      <Text style={styles.title}>Enter Event Code</Text>
+            <Text style={styles.title}>Enter Event Code</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Guest Event Code"
-        value={code}
-        onChangeText={setCode}
-        autoCapitalize="characters"
-        editable={!loading}
-      />
+            <TextInput
+              style={styles.input}
+              placeholder="Guest Event Code"
+              value={code}
+              onChangeText={setCode}
+              autoCapitalize="characters"
+              editable={!loading}
+              returnKeyType="done"
+            />
 
-      <TouchableOpacity style={[styles.button, loading && { opacity: 0.6 }]} onPress={handleJoin} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? 'Joining…' : 'Join Event'}</Text>
-      </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, loading && { opacity: 0.6 }]}
+              onPress={handleJoin}
+              disabled={loading}
+            >
+              <Text style={styles.buttonText}>{loading ? 'Joining…' : 'Join Event'}</Text>
+            </TouchableOpacity>
 
-      <TouchableOpacity style={styles.homeButton} onPress={handleGoHome} disabled={loading}>
-        <Text style={styles.homeButtonText}>Home</Text>
-      </TouchableOpacity>
+            <TouchableOpacity style={styles.homeButton} onPress={handleGoHome} disabled={loading}>
+              <Text style={styles.homeButtonText}>Home</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
 
-      {loading && (
-        <View style={localStyles.overlay}>
-          <ActivityIndicator size="large" />
-          <Text style={localStyles.overlayText}>{slow ? 'Still working…' : 'Loading…'}</Text>
-        </View>
-      )}
+        {loading && (
+          <View style={localStyles.overlay}>
+            <ActivityIndicator size="large" />
+            <Text style={localStyles.overlayText}>{slow ? 'Still working…' : 'Loading…'}</Text>
+          </View>
+        )}
+      </KeyboardAvoidingView>
     </EnterEventBackground>
   );
 }
@@ -143,4 +169,3 @@ const localStyles = StyleSheet.create({
     fontSize: 16,
   },
 });
-

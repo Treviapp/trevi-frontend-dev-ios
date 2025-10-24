@@ -73,7 +73,16 @@ export default function GiftListScreen({ route, navigation }) {
       const res = await client.get(`/campaigns/host/${hostCode}`, { timeout: 15000 });
       const uniqueGifts = dedupeGifts(res.data?.donations || []);
       if (!mounted.current) return;
-      setGifts(uniqueGifts);
+
+      // ✅ Add photo_url for display
+      const giftsWithImages = uniqueGifts.map((gift) => ({
+        ...gift,
+        photo_url: gift.photo_path
+          ? `http://192.168.1.62:8000/storage/${gift.photo_path.replace(/^public\//, '')}`
+          : null,
+      }));
+
+      setGifts(giftsWithImages);
     } catch (err) {
       console.error(err);
       if (!mounted.current) return;
@@ -108,12 +117,19 @@ export default function GiftListScreen({ route, navigation }) {
         const uniqueGifts = dedupeGifts(res.data?.donations || []);
         if (!mounted.current) break;
 
-        if (uniqueGifts.length !== giftsRef.current.length) {
-          setGifts(uniqueGifts);
+        const giftsWithImages = uniqueGifts.map((gift) => ({
+          ...gift,
+          photo_url: gift.photo_path
+            ? `http://192.168.1.62:8000/storage/${gift.photo_path.replace(/^public\//, '')}`
+            : null,
+        }));
+
+        if (giftsWithImages.length !== giftsRef.current.length) {
+          setGifts(giftsWithImages);
           break; // stop once we detect a change
         }
       } catch (_e) {
-        // soft-sync swallow
+        // ignore transient sync errors
       }
       i++;
     }
@@ -156,7 +172,7 @@ export default function GiftListScreen({ route, navigation }) {
                   <Image
                     source={{ uri: gift.photo_url }}
                     style={styles.image}
-                    resizeMode="contain"
+                    resizeMode="cover"
                   />
                 )}
                 <Text style={styles.name}>

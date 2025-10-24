@@ -14,48 +14,94 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import * as Animatable from 'react-native-animatable';
 import styles from './Style';
+import { API_BASE_URL } from '../../api/config'; // ✅ fixed import
 
 const HostCreateMessageScreen = ({ route, navigation }) => {
-  // ✅ Safe params with defaults
   const { fullName = '', email = '', eventName = '' } = route?.params ?? {};
   const [guestMessage, setGuestMessage] = useState('');
-  const [image, setImage] = useState(null); // { uri, width, height, ... }
+  const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      Alert.alert('Permission needed', 'Please allow access to your photo library.');
-      return;
-    }
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert('Permission needed', 'Please allow access to your photo library.');
+        return;
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      quality: 0.5,
-    });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 0.6,
+      });
 
-    // supports both new (canceled) and old (cancelled)
-    const userCancelled = result.canceled ?? result.cancelled;
-    if (!userCancelled && result.assets && result.assets[0]) {
-      setImage(result.assets[0]);
+      if (!result.canceled && result.assets && result.assets[0]) {
+        setImage(result.assets[0]);
+      }
+    } catch (err) {
+      console.error('Image picker error:', err);
+      Alert.alert('Error', 'Unable to open image picker.');
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!fullName || !email || !eventName) {
       Alert.alert('Missing info', 'Please start from the Create Event screen.');
       navigation.navigate('CreateEventScreen');
       return;
     }
 
-    // 🚀 No backend call here — pass along to StripeLinkingScreen
-    navigation.navigate('StripeLinkingScreen', {
-      fullName,
-      email,
-      eventName,
-      guestMessage,
-      image,
-    });
+    setLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('creator_name', fullName);
+      formData.append('creator_email', email);
+      formData.append('name', eventName);
+      if (guestMessage) formData.append('guest_message', guestMessage);
+
+      // ✅ fixed image upload structure
+      if (image) {
+        formData.append('host_image', {
+          uri: image.uri,
+          name: 'host_image.jpg',
+          type: 'image/jpeg',
+        });
+      }
+
+      console.log('📡 Sending event data to /api/campaigns...');
+      const response = await fetch(`${API_BASE_URL}/campaigns`, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'multipart/form-data',
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      console.log('🧾 API response:', data);
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create event');
+      }
+
+      navigation.navigate('StripeLinkingScreen', {
+        fullName,
+        email,
+        eventName,
+        guestMessage,
+        hostCode: data.host_code,
+        guestCode: data.guest_code,
+        hostImageUrl: data.host_image_url,
+      });
+    } catch (err) {
+      console.error('❌ Error creating event:', err);
+      Alert.alert('Error', 'Could not create event. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const aspectRatio =
@@ -74,7 +120,6 @@ const HostCreateMessageScreen = ({ route, navigation }) => {
           keyboardShouldPersistTaps="handled"
           style={{ paddingBottom: 10 }}
         >
-          {/* 🧚 Fixed fairy at the top */}
           <Animatable.Image
             animation="pulse"
             iterationCount="infinite"
@@ -88,7 +133,7 @@ const HostCreateMessageScreen = ({ route, navigation }) => {
 
           <TextInput
             style={styles.inputMessage}
-            placeholder="Write a short message to your guests. Let them know what their gift is going towards..."
+            placeholder="Write a short message for your guests..."
             value={guestMessage}
             onChangeText={setGuestMessage}
             multiline
@@ -100,7 +145,6 @@ const HostCreateMessageScreen = ({ route, navigation }) => {
             </Text>
           </TouchableOpacity>
 
-          {/* Non-cropping preview */}
           {image && (
             <View style={localStyles.previewWrapper}>
               <Image
@@ -111,8 +155,14 @@ const HostCreateMessageScreen = ({ route, navigation }) => {
             </View>
           )}
 
-          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-            <Text style={styles.buttonText}>Next</Text>
+          <TouchableOpacity
+            style={[styles.button, loading && { opacity: 0.6 }]}
+            onPress={handleSubmit}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? 'Please wait…' : 'Create Event'}
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -136,7 +186,7 @@ const localStyles = StyleSheet.create({
   },
   preview: {
     width: '100%',
-    height: undefined, // derived from aspectRatio
+    height: undefined,
     maxHeight: 250,
     borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.6)',

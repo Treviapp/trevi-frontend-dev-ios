@@ -2,7 +2,7 @@
   "expo": {
     "name": "Trevi",
     "slug": "trevi",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "scheme": "trevi",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -21,16 +21,17 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.amandatreviapp.trevi",
+      "buildNumber": "1.0.3",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Trevi needs camera access so donors can attach a photo with their gift.",
         "NSPhotoLibraryUsageDescription": "Trevi needs photo library access so donors can choose a photo to include with their gift.",
-        "NSPhotoLibraryAddUsageDescription": "Trevi may save the photo you choose to include with your gift.",
+        "NSPhotoLibraryAddUsageDescription": "Trevi may save the photo you choose to include with their gift.",
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
-        }
+        },
+        "NSLocalNetworkUsageDescription": "Trevi needs access to your local network to connect to your test backend."
       },
-      "buildNumber": "1.0.2",
       "splash": {
         "image": "./src/Assets/Images/splash.png",
         "resizeMode": "cover",
@@ -50,6 +51,13 @@
             "compileSdkVersion": 35,
             "targetSdkVersion": 35
           }
+        }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.trevi",
+          "enableGooglePay": true
         }
       ]
     ],
@@ -87,6 +95,4 @@
     }
   }
 }
-
-
 

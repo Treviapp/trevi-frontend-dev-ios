@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { Text, TextInput, TouchableOpacity, Alert, Image, View } from 'react-native';
+import {
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  Image,
+  View,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+} from 'react-native';
 import styles from './Style';
 import AccessEventBackground from '../AccessEventBackground';
 import { client } from '../../api/config';
@@ -33,31 +43,45 @@ export default function AccessEventScreen({ navigation }) {
 
   return (
     <AccessEventBackground>
-      <View style={styles.imageContainer}>
-        <Image
-          source={require('../../Assets/Images/lockandkey.png')}
-          style={styles.image}
-          resizeMode="contain"
-        />
-      </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            paddingHorizontal: 20,
+          }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.imageContainer}>
+            <Image
+              source={require('../../Assets/Images/lockandkey.png')}
+              style={styles.image}
+              resizeMode="contain"
+            />
+          </View>
 
-      <Text style={styles.title}>Access Your Event</Text>
+          <Text style={styles.title}>Access Your Event</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Host Code"
-        value={hostCode}
-        onChangeText={setHostCode}
-        autoCapitalize="characters"
-      />
+          <TextInput
+            style={styles.input}
+            placeholder="Host Code"
+            value={hostCode}
+            onChangeText={setHostCode}
+            autoCapitalize="characters"
+          />
 
-      <TouchableOpacity style={styles.button} onPress={handleAccess}>
-        <Text style={styles.buttonText}>Access Event</Text>
-      </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={handleAccess}>
+            <Text style={styles.buttonText}>Access Event</Text>
+          </TouchableOpacity>
 
-      <TouchableOpacity style={styles.homeButton} onPress={handleGoHome}>
-        <Text style={styles.homeButtonText}>Home</Text>
-      </TouchableOpacity>
+          <TouchableOpacity style={styles.homeButton} onPress={handleGoHome}>
+            <Text style={styles.homeButtonText}>Home</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </AccessEventBackground>
   );
 }

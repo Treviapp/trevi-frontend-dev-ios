@@ -9,16 +9,31 @@
       "distribution": "internal",
       "ios": {
         "image": "macos-sequoia-15.3-xcode-16.2"
+      },
+      "android": {
+        "buildType": "apk"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "ios": {
+        "image": "macos-sequoia-15.3-xcode-16.2"
+      }
+    },
+    "adhoc": {
+      "developmentClient": false,
+      "distribution": "internal",
+      "ios": {
+        "image": "macos-sequoia-15.3-xcode-16.2"
       }
     },
     "production": {
       "autoIncrement": true,
+      "developmentClient": false,
+      "distribution": "store",
       "android": {
         "buildType": "app-bundle",
         "image": "latest"

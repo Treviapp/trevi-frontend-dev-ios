@@ -1,46 +1,19 @@
-import axios from "axios";
-import store from "../redux";
+import axios from 'axios';
 
-/* ------------------------------------------------------------------
-   Define Backend URLs
-   ------------------------------------------------------------------ */
-export const BASE_URL = "https://trevi-backend.onrender.com/api";
-export const ROOT_URL = BASE_URL;
+// 🧭 Force local backend for testing
+const API_BASE_URL = 'https://09bde9465c47.ngrok-free.app/api';
 
-/* ------------------------------------------------------------------
-   Axios client
-   ------------------------------------------------------------------ */
+// 🛰️ Axios client for all API requests
 const client = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-  },
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  validateStatus: () => true,
 });
 
-/* ------------------------------------------------------------------
-   Attach bearer-token (if a creator logs in later)
-   ------------------------------------------------------------------ */
-client.interceptors.request.use(
-  (config) => {
-    const { authenticationToken } = store.getState().userSession || {};
+// 🧩 Helper to log base URL
+const logBaseURL = () => {
+  console.log('🔗 Using API Base URL:', API_BASE_URL);
+};
 
-    return {
-      ...config,
-      headers: {
-        Accept: "application/json",
-        "Content-Type": config.headers["Content-Type"] || "application/json",
-        ...(authenticationToken && {
-          Authorization: `Bearer ${authenticationToken.token}`,
-        }),
-      },
-    };
-  },
-  (err) => Promise.reject(err)
-);
+export { API_BASE_URL, client, logBaseURL };
 
-/* ------------------------------------------------------------------
-   Export everything needed
-   ------------------------------------------------------------------ */
-export { client };
-export const API_BASE_URL = BASE_URL;

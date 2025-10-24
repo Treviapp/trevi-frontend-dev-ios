@@ -103,7 +103,7 @@ export default function CreateEventSuccessScreen({ route, navigation }) {
         <Text style={styles.code}>{finalGuestCode || '—'}</Text>
 
         <Text style={styles.emailNotice}>
-          ✅ We've emailed you these event codes.
+          ✅ please make a note of these codes - i.e. take a screenshot.
         </Text>
 
         <Text style={styles.note}>

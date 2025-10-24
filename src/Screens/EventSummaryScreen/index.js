@@ -125,11 +125,13 @@ export default function EventSummaryScreen({ route, navigation }) {
       <Text style={styles.handwritingTitle}>Welcome to {campaign.title}</Text>
       <Text style={styles.subtitle}>Hosted by {campaign.host}</Text>
 
-      {campaign.host_image && (
+      {(campaign.host_image_url || campaign.host_image) && (
         <Image
-          source={{ uri: campaign.host_image }}
+          source={{
+            uri: campaign.host_image_url || campaign.host_image,
+          }}
           style={styles.image}
-          resizeMode="contain"
+          resizeMode="cover"
         />
       )}
 
@@ -163,4 +165,5 @@ const localStyles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
 
