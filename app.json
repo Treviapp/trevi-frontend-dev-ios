@@ -2,7 +2,7 @@
   "expo": {
     "name": "Trevi",
     "slug": "trevi",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "scheme": "trevi",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -21,7 +21,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.amandatreviapp.trevi",
-      "buildNumber": "1.0.3",
+      "buildNumber": "1.0.4",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Trevi needs camera access so donors can attach a photo with their gift.",

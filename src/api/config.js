@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// 🧭 Force local backend for testing
-const API_BASE_URL = 'https://09bde9465c47.ngrok-free.app/api';
+// 🧭 Local backend for testing (make sure Laravel is running)
+const API_BASE_URL = 'http://192.168.1.62:8000/api';
 
 // 🛰️ Axios client for all API requests
 const client = axios.create({
@@ -16,4 +16,3 @@ const logBaseURL = () => {
 };
 
 export { API_BASE_URL, client, logBaseURL };
-
