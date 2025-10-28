@@ -46,6 +46,8 @@ const HostCreateMessageScreen = ({ route, navigation }) => {
   };
 
   const handleSubmit = async () => {
+    console.log('🟢 handleSubmit called'); // ✅ added log
+
     if (!fullName || !email || !eventName) {
       Alert.alert('Missing info', 'Please start from the Create Event screen.');
       navigation.navigate('CreateEventScreen');
@@ -61,7 +63,6 @@ const HostCreateMessageScreen = ({ route, navigation }) => {
       formData.append('name', eventName);
       if (guestMessage) formData.append('guest_message', guestMessage);
 
-      // ✅ fixed image upload structure
       if (image) {
         formData.append('host_image', {
           uri: image.uri,
